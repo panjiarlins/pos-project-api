@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: {
           name: 'voucherCode',
           primaryKey: true,
+          unique: false,
         },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',

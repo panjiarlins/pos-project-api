@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: {
           name: 'productId',
           primaryKey: true,
+          unique: false,
         },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
@@ -25,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: {
           name: 'productId',
           primaryKey: true,
+          unique: false,
         },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
