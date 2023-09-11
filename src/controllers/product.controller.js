@@ -5,7 +5,13 @@ const { sequelize, Product, Category } = require('../models');
 const productController = {
   getProducts: async (req, res) => {
     try {
-      //
+      const productsData = await Product.findAll({
+        attributes: { exclude: ['image'] },
+      });
+      res.status(200).json({
+        status: 'success',
+        data: productsData,
+      });
     } catch (error) {
       res.status(error?.statusCode || 500).json({
         status: 'error',
@@ -23,12 +29,12 @@ const productController = {
         }
 
         // check if categoryId exist
-        const categoryData = await Category.findAll({
+        const categoriesData = await Category.findAll({
           attributes: ['id'],
           where: { id: req.body.categoryId },
           transaction: t,
         });
-        if (categoryData?.length !== req.body.categoryId.length)
+        if (categoriesData?.length !== req.body.categoryId.length)
           throw new ResponseError('invalid categoryId', 400);
 
         // create new product
