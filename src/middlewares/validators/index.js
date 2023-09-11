@@ -1,3 +1,4 @@
+const categoryValidator = require('./category.validator');
 const productValidator = require('./product.validator');
 
-module.exports = { productValidator };
+module.exports = { categoryValidator, productValidator };
