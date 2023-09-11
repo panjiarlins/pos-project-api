@@ -8,7 +8,7 @@ const {
 // POST register user
 router.post(
   '/',
-  multerBlobUploader,
+  multerBlobUploader().single('image'),
   multerErrorHandler,
   userController.registerUser
 );

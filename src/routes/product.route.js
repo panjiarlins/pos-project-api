@@ -13,7 +13,7 @@ router.get('/', productValidator.getProducts, productController.getProducts);
 // POST new product
 router.post(
   '/',
-  multerBlobUploader.single('image'),
+  multerBlobUploader().single('image'),
   multerErrorHandler,
   productValidator.createProduct,
   productAuth.createProduct,
