@@ -17,5 +17,5 @@ app.use('/users', userRouter);
 
 app.listen(PORT, () => {
   console.log(`listen on port:${PORT}`);
-  // db.sequelize.sync({ force: true });
+  // db.sequelize.sync({ alter: true });
 });
