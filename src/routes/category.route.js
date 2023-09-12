@@ -22,6 +22,8 @@ router.post(
 // PATCH edit caregory by categoryId
 router.patch(
   '/:id',
+  multerBlobUploader().single('image'),
+  multerErrorHandler,
   categoryValidator.editCategoryById,
   categoryAuth.editCategoryById,
   categoryController.editCategoryById
