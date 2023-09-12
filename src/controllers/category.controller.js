@@ -8,6 +8,7 @@ const categoryController = {
       const categoriesData = await Category.findAll({
         attributes: { exclude: ['image'] },
       });
+
       res.status(200).json({
         status: 'success',
         data: categoriesData,
@@ -23,11 +24,11 @@ const categoryController = {
   createCategory: async (req, res) => {
     try {
       await sequelize.transaction(async (t) => {
-        if (req.file) {
-          // get category image
+        // get category image
+        if (req.file)
           req.body.image = await sharp(req.file.buffer).png().toBuffer();
-        }
 
+        // create category
         const categoryData = await Category.create(req.body, {
           fields: ['name', 'image'],
           transaction: t,
@@ -49,10 +50,31 @@ const categoryController = {
     }
   },
 
-  editCategoryById: async () => {},
+  editCategoryById: async (req, res) => {
+    try {
+      // get category image
+      if (req.file)
+        req.body.image = await sharp(req.file.buffer).png().toBuffer();
+
+      // check if category exist
+      const categoryData = await Category.findByPk(req.params.id);
+      if (!categoryData) throw new ResponseError('category not found', 404);
+
+      // update category
+      await categoryData.update(req.body, { fields: ['name', 'image'] });
+
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(error?.statusCode || 500).json({
+        status: 'error',
+        message: error?.message || error,
+      });
+    }
+  },
 
   deleteCategoryById: async (req, res) => {
     try {
+      // delete category
       const result = await Category.destroy({ where: { id: req.params.id } });
       if (!result) throw new ResponseError('category not found', 404);
 
