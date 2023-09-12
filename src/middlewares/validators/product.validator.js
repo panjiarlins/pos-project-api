@@ -18,7 +18,7 @@ const productValidator = {
       const schemaBody = Joi.object({
         name: Joi.string().required(),
         categoryId: Joi.array()
-          .items(Joi.number().integer().min(1).required())
+          .items(Joi.number().integer().min(1).optional())
           .required(),
         description: Joi.string().required(),
         isActive: Joi.boolean().optional(),
