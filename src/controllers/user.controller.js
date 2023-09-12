@@ -61,15 +61,18 @@ const userController = {
       };
 
       const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: '1h',
+        expiresIn: '24h',
       });
 
       res.status(200).json({
-        token,
-        user: {
-          ...user.toJSON(),
-          image: undefined,
-          password: undefined,
+        status: 'success',
+        data: {
+          token,
+          user: {
+            ...user.toJSON(),
+            image: undefined,
+            password: undefined,
+          },
         },
       });
     } catch (error) {
@@ -82,8 +85,14 @@ const userController = {
 
   getAllUser: async (req, res) => {
     try {
-      const users = await User.findAll();
-      res.status(200).send(users);
+      const usersData = await User.findAll({
+        attributes: { exclude: ['image', 'password'] },
+      });
+
+      res.status(200).json({
+        status: 'success',
+        data: usersData,
+      });
     } catch (error) {
       res.status(error?.statusCode || 500).json({
         status: 'error',
@@ -91,10 +100,18 @@ const userController = {
       });
     }
   },
+
   getUserById: async (req, res) => {
     try {
-      const { id } = req.params;
-      await User.findOne({ where: { id } }).then((result) => res.send(result));
+      const userData = await User.findByPk(req.params.id, {
+        attributes: { exclude: ['image', 'password'] },
+      });
+      if (!userData) throw new ResponseError('user not found', 404);
+
+      res.status(200).json({
+        status: 'success',
+        data: userData,
+      });
     } catch (error) {
       res.status(error?.statusCode || 500).json({
         status: 'error',
@@ -102,52 +119,35 @@ const userController = {
       });
     }
   },
-  editUserById: async (req, res) => {
-    const { token } = req;
-    const {
-      username,
-      fullname,
-      email,
-      image,
-      password,
-      isAdmin,
-      isCashier,
-      isActive,
-    } = req.body;
 
-    if (!token)
-      throw new ResponseError('Unauthorized: User Not Logged In!', 400);
+  editUserById: async (req, res) => {
+    if (!req.token)
+      throw new ResponseError('Unauthorized: User Not Logged In!', 401);
     try {
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      const decodedToken = jwt.verify(req.token, process.env.JWT_SECRET_KEY);
       const userId = decodedToken.id;
 
       if (req.file) {
         req.body.image = await sharp(req.file.buffer).png().toBuffer();
-        req.body.image = req.file.originalname;
       }
-      const newUser = await User.update(
-        {
-          username,
-          fullname,
-          email,
-          image: req.body.image,
-          password,
-          isAdmin,
-          isCashier,
-          isActive,
+      const [numUpdated] = await User.update(req.body, {
+        where: {
+          id: userId,
         },
-        {
-          where: {
-            id: userId,
-          },
-        }
-      );
+        fields: [
+          'username',
+          'fullname',
+          'email',
+          'image',
+          'password',
+          'isAdmin',
+          'isCashier',
+          'isActive',
+        ],
+      });
+      if (numUpdated === 0) throw new ResponseError('user not found', 400);
 
-      if (newUser === 0) throw new ResponseError('user not found', 400);
-
-      res
-        .status(200)
-        .send({ message: 'User updated successfully', user: newUser });
+      res.sendStatus(204);
     } catch (error) {
       res.status(error?.statusCode || 500).json({
         status: 'error',
@@ -155,6 +155,7 @@ const userController = {
       });
     }
   },
+
   deleteUserById: async (req, res) => {
     try {
       const { id } = req.params;
@@ -162,7 +163,8 @@ const userController = {
       const deletedUser = await User.destroy({ where: { id } });
 
       if (deletedUser === 0) throw new ResponseError('user not found', 400);
-      res.status(200).send({ message: 'User deleted successfully' });
+
+      res.sendStatus(204);
     } catch (error) {
       res.status(error?.statusCode || 500).json({
         status: 'error',

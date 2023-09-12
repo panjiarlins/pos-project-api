@@ -9,9 +9,7 @@ const userValidator = require('../middlewares/validators/user.validator');
 // POST register user
 router.post(
   '/',
-  multerBlobUploader({
-    filetype: 'image',
-  }).single('image'),
+  multerBlobUploader().single('image'),
   multerErrorHandler,
   userValidator.registerUser,
   userController.registerUser
@@ -24,7 +22,7 @@ router.post('/auth', userController.loginUser);
 router.get('/', userController.getAllUser);
 
 // GET user by Id
-router.get('/:id', userValidator.getUserById, userController.getUserById);
+router.get('/user/:id', userValidator.getUserById, userController.getUserById);
 
 // PATCH user by userId
 router.patch(
