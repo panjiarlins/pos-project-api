@@ -1,3 +1,4 @@
+const categoryAuth = require('./category.auth');
 const productAuth = require('./product.auth');
 
-module.exports = { productAuth };
+module.exports = { categoryAuth, productAuth };

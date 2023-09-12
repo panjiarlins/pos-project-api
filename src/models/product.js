@@ -11,6 +11,33 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      models.Product.belongsToMany(models.Category, {
+        through: models.ProductCategory,
+        foreignKey: {
+          name: 'productId',
+          primaryKey: true,
+          unique: false,
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
+      models.Product.belongsToMany(models.Voucher, {
+        through: models.ProductVoucher,
+        foreignKey: {
+          name: 'productId',
+          primaryKey: true,
+          unique: false,
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
+      models.Product.hasMany(models.Variant, {
+        foreignKey: {
+          name: 'productId',
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
     }
   }
   Product.init(
