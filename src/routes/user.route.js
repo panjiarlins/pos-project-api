@@ -4,12 +4,16 @@ const {
   multerBlobUploader,
   multerErrorHandler,
 } = require('../middlewares/multers');
+const userValidator = require('../middlewares/validators/user.validator');
 
 // POST register user
 router.post(
   '/',
-  multerBlobUploader().single('image'),
+  multerBlobUploader({
+    filetype: 'image',
+  }).single('image'),
   multerErrorHandler,
+  userValidator.registerUser,
   userController.registerUser
 );
 
@@ -20,9 +24,20 @@ router.post('/auth', userController.loginUser);
 router.get('/', userController.getAllUser);
 
 // PATCH user by userId
-router.patch('/:id', userController.editUserById);
+router.patch(
+  '/:id',
+  multerBlobUploader().single('image'),
+  multerErrorHandler,
+  userValidator.editUserByIdWithParams,
+  userController.editUserById,
+  userValidator.editUserById
+);
 
 // DELETE user by userId
-router.delete('/:id', userController.deleteUserById);
+router.delete(
+  '/:id',
+  userValidator.deleteUserByIdWithParams,
+  userController.deleteUserById
+);
 
 module.exports = router;
