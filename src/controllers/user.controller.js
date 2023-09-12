@@ -7,45 +7,31 @@ const { ResponseError } = require('../errors');
 
 const userController = {
   registerUser: async (req, res) => {
-    const {
-      username,
-      fullname,
-      email,
-      image,
-      password,
-      isAdmin,
-      isCashier,
-      isActive,
-    } = req.body;
-
     try {
-      const existingUser = await User.findOne({ where: { email } });
+      const existingUser = await User.findOne({
+        where: { email: req.body.email },
+      });
 
       if (existingUser) throw new ResponseError('Email already in use', 400);
 
-      const hashedPass = await bcrypt.hash(password, 10);
+      const hashedPass = await bcrypt.hash(req.body.password, 10);
 
       // Process and store the image in a buffer
       if (req.file) {
         req.body.image = await sharp(req.file.buffer).png().toBuffer();
-        req.body.image = req.file.originalname;
       }
 
       const newUser = await User.create({
-        email,
+        ...req.body,
         password: hashedPass,
-        username,
-        image: req.body.image,
-        fullname,
-        isAdmin,
-        isActive,
-        isCashier,
       });
 
-      res.status(200).json({
+      res.status(201).json({
         status: 'success',
         data: {
-          user: newUser,
+          ...newUser.toJSON(),
+          image: undefined,
+          password: undefined,
         },
       });
     } catch (error) {
@@ -57,11 +43,11 @@ const userController = {
   },
 
   loginUser: async (req, res) => {
-    const { username, password, isAdmin, isCashier } = req.body;
+    const { username, password } = req.body;
     console.log(req.body, 'login');
     try {
       const user = await User.findOne({
-        where: { username, isAdmin, isCashier },
+        where: { username },
       });
 
       if (!user) throw new ResponseError('user not found', 404);
@@ -78,11 +64,12 @@ const userController = {
         expiresIn: '1h',
       });
 
-      return res.send({
+      res.status(200).json({
         token,
         user: {
           ...user.toJSON(),
           image: undefined,
+          password: undefined,
         },
       });
     } catch (error) {
@@ -104,7 +91,17 @@ const userController = {
       });
     }
   },
-
+  getUserById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await User.findOne({ where: { id } }).then((result) => res.send(result));
+    } catch (error) {
+      res.status(error?.statusCode || 500).json({
+        status: 'error',
+        message: error?.message || error,
+      });
+    }
+  },
   editUserById: async (req, res) => {
     const { token } = req;
     const {
@@ -167,8 +164,10 @@ const userController = {
       if (deletedUser === 0) throw new ResponseError('user not found', 400);
       res.status(200).send({ message: 'User deleted successfully' });
     } catch (error) {
-      console.error('Error while deleting user by ID:', error);
-      res.status(500).send(error.message);
+      res.status(error?.statusCode || 500).json({
+        status: 'error',
+        message: error?.message || error,
+      });
     }
   },
 };

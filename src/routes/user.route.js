@@ -23,6 +23,9 @@ router.post('/auth', userController.loginUser);
 // GET all user
 router.get('/', userController.getAllUser);
 
+// GET user by Id
+router.get('/:id', userValidator.getUserById, userController.getUserById);
+
 // PATCH user by userId
 router.patch(
   '/:id',
