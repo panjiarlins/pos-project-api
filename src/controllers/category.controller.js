@@ -1,5 +1,6 @@
 const sharp = require('sharp');
 const { sequelize, Category } = require('../models');
+const { ResponseError } = require('../errors');
 
 const categoryController = {
   getAllCategories: async (req, res) => {
@@ -50,7 +51,19 @@ const categoryController = {
 
   editCategoryById: async () => {},
 
-  deleteCategoryById: async () => {},
+  deleteCategoryById: async (req, res) => {
+    try {
+      const result = await Category.destroy({ where: { id: req.params.id } });
+      if (!result) throw new ResponseError('category not found', 404);
+
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(error?.statusCode || 500).json({
+        status: 'error',
+        message: error?.message || error,
+      });
+    }
+  },
 };
 
 module.exports = categoryController;
