@@ -7,6 +7,12 @@ const productController = {
     try {
       const productsData = await Product.findAll({
         attributes: { exclude: ['image'] },
+        include: [
+          {
+            model: Category,
+            attributes: { exclude: ['image'] },
+          },
+        ],
       });
       res.status(200).json({
         status: 'success',
