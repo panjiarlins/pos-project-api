@@ -5,8 +5,15 @@ const { sequelize, Product, Category } = require('../models');
 const productController = {
   getProducts: async (req, res) => {
     try {
+      const { categoryId, sortBy, orderBy } = req.query;
+
+      const where = {};
+      if (categoryId) where['$Categories.id$'] = categoryId;
+
       const productsData = await Product.findAll({
+        where,
         attributes: { exclude: ['image'] },
+        order: [[sortBy || 'id', orderBy || 'ASC']],
         include: [
           {
             model: Category,
