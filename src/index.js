@@ -6,6 +6,7 @@ const {
   userRouter,
   categoryRouter,
   productRouter,
+  transactionRouter,
   voucherRouter,
 } = require('./routes');
 // eslint-disable-next-line no-unused-vars
@@ -20,7 +21,9 @@ app.use(bearerToken());
 app.use('/users', userRouter);
 app.use('/categories', categoryRouter);
 app.use('/products', productRouter);
+app.use('/transaction', transactionRouter);
 app.use('/vouchers', voucherRouter);
+
 
 app.listen(PORT, () => {
   console.log(`listen on port:${PORT}`);

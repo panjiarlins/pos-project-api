@@ -86,7 +86,9 @@ const userController = {
   getAllUser: async (req, res) => {
     try {
       const usersData = await User.findAll({
-        attributes: { exclude: ['image', 'password'] },
+        attributes: {
+          exclude: ['image', 'password'],
+        },
       });
 
       res.status(200).json({
@@ -104,7 +106,9 @@ const userController = {
   getUserById: async (req, res) => {
     try {
       const userData = await User.findByPk(req.params.id, {
-        attributes: { exclude: ['image', 'password'] },
+        attributes: {
+          exclude: ['image', 'password'],
+        },
       });
       if (!userData) throw new ResponseError('user not found', 404);
 
@@ -121,27 +125,25 @@ const userController = {
   },
 
   editUserById: async (req, res) => {
-    if (!req.token)
-      throw new ResponseError('Unauthorized: User Not Logged In!', 401);
+    // if (!req.token)
+    //   throw new ResponseError('Unauthorized: User Not Logged In!', 401);
     try {
-      const decodedToken = jwt.verify(req.token, process.env.JWT_SECRET_KEY);
-      const userId = decodedToken.id;
+      // jwt.verify(req.token, process.env.JWT_SECRET_KEY);
 
       if (req.file) {
         req.body.image = await sharp(req.file.buffer).png().toBuffer();
       }
       const [numUpdated] = await User.update(req.body, {
         where: {
-          id: userId,
+          id: req.params.id,
         },
         fields: [
           'username',
           'fullname',
           'email',
           'image',
-          'password',
+          'isActive',
           'isAdmin',
-          'isCashier',
           'isActive',
         ],
       });

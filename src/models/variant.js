@@ -11,6 +11,13 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      models.Variant.belongsToMany(models.Transaction, {
+        through: models.TransactionVariant,
+        foreignKey: {
+          name: 'variantId',
+          unique: false,
+        },
+      });
       models.Variant.belongsTo(models.Product, {
         foreignKey: {
           name: 'productId',
