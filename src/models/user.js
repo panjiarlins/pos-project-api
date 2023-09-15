@@ -11,18 +11,27 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      User.hasMany(models.Transaction, {
+        as: 'Transactions',
+        foreignKey: {
+          name: 'userId',
+          allowNull: false,
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCASE',
+      });
     }
   }
   User.init(
     {
-      username: DataTypes.STRING,
-      email: DataTypes.STRING,
-      fullname: DataTypes.STRING,
-      password: DataTypes.STRING,
-      image: DataTypes.BLOB('long'),
-      isAdmin: DataTypes.BOOLEAN,
-      isCashier: DataTypes.BOOLEAN,
-      isActive: DataTypes.BOOLEAN,
+      username: { type: DataTypes.STRING, allowNull: false },
+      email: { type: DataTypes.STRING, allowNull: false },
+      fullname: { type: DataTypes.STRING, allowNull: false },
+      password: { type: DataTypes.STRING, allowNull: false },
+      image: { type: DataTypes.BLOB('long') },
+      isAdmin: { type: DataTypes.BOOLEAN, allowNull: false },
+      isCashier: { type: DataTypes.BOOLEAN, allowNull: false },
+      isActive: { type: DataTypes.BOOLEAN, allowNull: false },
     },
     {
       sequelize,

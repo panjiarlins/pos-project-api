@@ -2,7 +2,12 @@ require('dotenv').config();
 const cors = require('cors');
 const express = require('express');
 const bearerToken = require('express-bearer-token');
-const { userRouter, categoryRouter, productRouter } = require('./routes');
+const {
+  userRouter,
+  categoryRouter,
+  productRouter,
+  transactionRouter,
+} = require('./routes');
 // eslint-disable-next-line no-unused-vars
 const db = require('./models');
 
@@ -15,6 +20,7 @@ app.use(bearerToken());
 app.use('/users', userRouter);
 app.use('/categories', categoryRouter);
 app.use('/products', productRouter);
+app.use('/transaction', transactionRouter);
 
 app.listen(PORT, () => {
   console.log(`listen on port:${PORT}`);
