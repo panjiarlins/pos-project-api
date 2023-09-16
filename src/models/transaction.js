@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
+
       models.Transaction.belongsTo(models.Voucher, {
         foreignKey: {
           name: 'voucherCode',
@@ -27,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
+
       models.Transaction.belongsToMany(models.Variant, {
         through: models.TransactionVariant,
         foreignKey: {

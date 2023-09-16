@@ -15,9 +15,13 @@ module.exports = (sequelize, DataTypes) => {
         through: models.TransactionVariant,
         foreignKey: {
           name: 'variantId',
+          allowNull: false,
           unique: false,
         },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       });
+
       models.Variant.belongsTo(models.Product, {
         foreignKey: {
           name: 'productId',
