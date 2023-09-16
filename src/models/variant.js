@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       models.Variant.belongsTo(models.Product, {
         foreignKey: {
           name: 'productId',
+          allowNull: false,
         },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',

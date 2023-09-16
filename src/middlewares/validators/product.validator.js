@@ -54,7 +54,7 @@ const productValidator = {
         name: Joi.string().required(),
         categoryId: Joi.array().items(Joi.number().integer().min(1)),
         description: Joi.string().required(),
-        isActive: Joi.boolean().optional(),
+        isActive: Joi.boolean(),
         variants: Joi.array().items(
           Joi.object({
             name: Joi.string().required(),
@@ -80,7 +80,46 @@ const productValidator = {
   },
 
   editProductById: (req, res, next) => {
-    next();
+    try {
+      // convert categoryId : string -> array -> set -> array
+      if (req.body?.categoryId)
+        req.body.categoryId = [...new Set(JSON.parse(req.body.categoryId))];
+
+      // convert variants : string -> array
+      if (req.body?.variants) req.body.variants = JSON.parse(req.body.variants);
+
+      // convert isActive : string -> boolean
+      if (req.body?.isActive) req.body.isActive = JSON.parse(req.body.isActive);
+
+      // validate req.body
+      const schemaBody = Joi.object({
+        name: Joi.string(),
+        categoryId: Joi.array().items(Joi.number().integer().min(1)),
+        description: Joi.string(),
+        isActive: Joi.boolean(),
+        variants: Joi.array().items(
+          Joi.object({
+            id: Joi.number().integer().min(1),
+            name: Joi.string(),
+            price: Joi.number().integer().min(1),
+            stock: Joi.number().integer().min(0),
+          })
+        ),
+      }).required();
+      const resultBody = schemaBody.validate(req.body);
+      if (resultBody.error)
+        throw new ResponseError(resultBody.error?.message, 400);
+
+      // validate req.file
+      const schemaFile = Joi.optional().label('image');
+      const resultFile = schemaFile.validate(req.file);
+      if (resultFile.error)
+        throw new ResponseError(resultFile.error?.message, 400);
+
+      next();
+    } catch (error) {
+      sendResponse({ res, error });
+    }
   },
 
   deleteProductById: (req, res, next) => {

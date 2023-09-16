@@ -36,6 +36,9 @@ router.post(
 // PATCH edit product by productd
 router.patch(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
+  multerBlobUploader().single('image'),
+  multerErrorHandler,
   productValidator.editProductById,
   productController.editProductById
 );
