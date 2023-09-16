@@ -1,35 +1,35 @@
 const router = require('express').Router();
 const { productValidator } = require('../middlewares/validators');
-const { productAuth } = require('../middlewares/auth');
 const { productController } = require('../controllers');
 const {
   multerBlobUploader,
   multerErrorHandler,
 } = require('../middlewares/multers');
+const verifyUserAuth = require('../middlewares/auth/verifyUserAuth');
 
 // GET products
 router.get(
   '/',
+  verifyUserAuth({ isAdmin: true, isCashier: true }),
   productValidator.getProducts,
-  productAuth.getProducts,
   productController.getProducts
 );
 
 // GET product image by productId
 router.get(
   '/image/:id',
+  verifyUserAuth({ isAdmin: true, isCashier: true }),
   productValidator.getProductImageById,
-  productAuth.getProductImageById,
   productController.getProductImageById
 );
 
 // POST new product
 router.post(
   '/',
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
   productValidator.createProduct,
-  productAuth.createProduct,
   productController.createProduct
 );
 
@@ -37,7 +37,6 @@ router.post(
 router.patch(
   '/:id',
   productValidator.editProductById,
-  productAuth.editProductById,
   productController.editProductById
 );
 
@@ -45,7 +44,6 @@ router.patch(
 router.delete(
   '/:id',
   productValidator.deleteProductById,
-  productAuth.deleteProductById,
   productController.deleteProductId
 );
 

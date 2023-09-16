@@ -1,6 +1,12 @@
 const sharp = require('sharp');
 const { ResponseError } = require('../errors');
-const { Sequelize, sequelize, Product, Category } = require('../models');
+const {
+  Sequelize,
+  sequelize,
+  Product,
+  Category,
+  Variant,
+} = require('../models');
 const sendResponse = require('../utils/sendResponse');
 
 const productController = {
@@ -66,60 +72,40 @@ const productController = {
           field: ['name', 'description', 'image', 'isActive'],
           transaction: t,
         });
+
+        // set category for new product
         await productData.setCategories(req.body.categoryId, {
           transaction: t,
         });
 
-        res.status(201).json({
-          status: 'success',
-          data: {
-            ...productData.toJSON(),
-            image: undefined,
-          },
+        // set variant for new product
+        const variantsData = await Variant.bulkCreate(req.body.variants, {
+          fields: ['name', 'price', 'stock'],
+          transaction: t,
         });
+        console.log(variantsData);
+        await productData.setVariants(variantsData, { transaction: t });
+
+        // get result product data
+        const result = await Product.findByPk(productData.id, {
+          attributes: { exclude: ['image'] },
+          include: [
+            { model: Category, attributes: { exclude: ['image'] } },
+            { model: Variant },
+          ],
+          transaction: t,
+        });
+
+        sendResponse({ res, statusCode: 200, data: result });
       });
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 
   editProductById: async (req, res) => {
     try {
-      await sequelize.transaction(async (t) => {
-        if (req.file) {
-          // get product image
-          req.body.image = await sharp(req.file.buffer).png().toBuffer();
-        }
-
-        // check if categoryId exist
-        const categoriesData = await Category.findAll({
-          attributes: ['id'],
-          where: { id: req.body.categoryId },
-          transaction: t,
-        });
-        if (categoriesData?.length !== req.body.categoryId.length)
-          throw new ResponseError('invalid categoryId', 400);
-
-        // create new product
-        const productData = await Product.create(req.body, {
-          field: ['name', 'description', 'image', 'isActive'],
-          transaction: t,
-        });
-        await productData.setCategories(req.body.categoryId, {
-          transaction: t,
-        });
-
-        res.status(201).json({
-          status: 'success',
-          data: {
-            ...productData.toJSON(),
-            image: undefined,
-          },
-        });
-      });
+      //
     } catch (error) {
       res.status(error?.statusCode || 500).json({
         status: 'error',
