@@ -86,7 +86,7 @@ const productController = {
         console.log(variantsData);
         await productData.setVariants(variantsData, { transaction: t });
 
-        // get result product data
+        // get product data
         const result = await Product.findByPk(productData.id, {
           attributes: { exclude: ['image'] },
           include: [
@@ -114,14 +114,14 @@ const productController = {
     }
   },
 
-  deleteProductId: async (req, res) => {
+  deleteProductById: async (req, res) => {
     try {
-      //
+      const result = await Product.destroy({ where: { id: req.params.id } });
+      if (!result) throw new ResponseError('product not found', 404);
+
+      res.sendStatus(204);
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 };

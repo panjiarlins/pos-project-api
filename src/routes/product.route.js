@@ -1,11 +1,11 @@
 const router = require('express').Router();
+const verifyUserAuth = require('../middlewares/auth/verifyUserAuth');
 const { productValidator } = require('../middlewares/validators');
 const { productController } = require('../controllers');
 const {
   multerBlobUploader,
   multerErrorHandler,
 } = require('../middlewares/multers');
-const verifyUserAuth = require('../middlewares/auth/verifyUserAuth');
 
 // GET products
 router.get(
@@ -43,8 +43,9 @@ router.patch(
 // DELETE product by productId
 router.delete(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
   productValidator.deleteProductById,
-  productController.deleteProductId
+  productController.deleteProductById
 );
 
 module.exports = router;
