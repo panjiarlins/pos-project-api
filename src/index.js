@@ -24,7 +24,6 @@ app.use('/products', productRouter);
 app.use('/transaction', transactionRouter);
 app.use('/vouchers', voucherRouter);
 
-
 app.listen(PORT, () => {
   console.log(`listen on port:${PORT}`);
   // db.sequelize.sync({ alter: true });

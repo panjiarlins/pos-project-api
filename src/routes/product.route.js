@@ -8,7 +8,12 @@ const {
 } = require('../middlewares/multers');
 
 // GET products
-router.get('/', productValidator.getProducts, productController.getProducts);
+router.get(
+  '/',
+  productValidator.getProducts,
+  productAuth.getProducts,
+  productController.getProducts
+);
 
 // POST new product
 router.post(
@@ -25,7 +30,7 @@ router.patch(
   '/:id',
   productValidator.editProductById,
   productAuth.editProductById,
-  productValidator.editProductById
+  productController.editProductById
 );
 
 // DELETE product by productId

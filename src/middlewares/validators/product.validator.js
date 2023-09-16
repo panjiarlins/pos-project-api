@@ -1,9 +1,25 @@
 const Joi = require('joi');
 const { ResponseError } = require('../../errors');
+const sendResponse = require('../../utils/sendResponse');
 
 const productValidator = {
   getProducts: (req, res, next) => {
-    next();
+    try {
+      const schema = Joi.object({
+        name: Joi.string().allow(''),
+        categoryId: Joi.number().integer().min(1).allow(''),
+        sortBy: Joi.string().allow(''),
+        orderBy: Joi.string().valid('ASC', 'asc', 'DESC', 'desc').allow(''),
+      });
+
+      const result = schema.validate(req.query);
+
+      if (result.error) throw new ResponseError(result.error?.message, 400);
+
+      next();
+    } catch (error) {
+      sendResponse({ res, error });
+    }
   },
 
   createProduct: (req, res, next) => {
