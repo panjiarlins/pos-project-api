@@ -16,9 +16,8 @@ function verifyUserAuth({ isAdmin = false, isCashier = false } = {}) {
             attributes: ['isAdmin', 'isCashier'],
           });
 
-          if (!userData) throw new ResponseError('user unauthorized', 401);
-          if (isAdmin && userData.isAdmin) return;
-          if (isCashier && userData.isCashier) return;
+          if (isAdmin && userData?.isAdmin) return;
+          if (isCashier && userData?.isCashier) return;
           throw new ResponseError('user unauthorized', 401);
         }
       );
