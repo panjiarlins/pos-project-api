@@ -8,7 +8,16 @@ const productValidator = {
       const schema = Joi.object({
         name: Joi.string().allow(''),
         categoryId: Joi.number().integer().min(1).allow(''),
-        sortBy: Joi.string().allow(''),
+        sortBy: Joi.string()
+          .valid(
+            'id',
+            'name',
+            'description',
+            'isActive',
+            'createdAt',
+            'updatedAt'
+          )
+          .allow(''),
         orderBy: Joi.string().valid('ASC', 'asc', 'DESC', 'desc').allow(''),
       });
 
