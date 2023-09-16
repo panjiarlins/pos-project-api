@@ -30,6 +30,20 @@ const productController = {
     }
   },
 
+  getProductImageById: async (req, res) => {
+    try {
+      const productData = await Product.findByPk(req.params.id, {
+        attributes: ['image'],
+      });
+      if (!productData?.image)
+        throw new ResponseError('product image not found', 404);
+
+      res.set('Content-type', 'image/png').send(productData.image);
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
   createProduct: async (req, res) => {
     try {
       await sequelize.transaction(async (t) => {

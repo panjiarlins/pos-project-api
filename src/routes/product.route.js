@@ -15,6 +15,14 @@ router.get(
   productController.getProducts
 );
 
+// GET product image by productId
+router.get(
+  '/image/:id',
+  productValidator.getProductImageById,
+  productAuth.getProductImageById,
+  productController.getProductImageById
+);
+
 // POST new product
 router.post(
   '/',
