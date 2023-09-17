@@ -43,7 +43,7 @@ const categoryValidator = {
     try {
       // validate req.params
       const schemaParams = Joi.object({
-        id: Joi.number().min(1).required(),
+        id: Joi.number().integer().min(1).required(),
       }).required();
       const resultParams = schemaParams.validate(req.params);
       if (resultParams.error)
@@ -70,7 +70,7 @@ const categoryValidator = {
   deleteCategoryById: (req, res, next) => {
     try {
       const schema = Joi.object({
-        id: Joi.number().min(1).required(),
+        id: Joi.number().integer().min(1).required(),
       }).required();
       const result = schema.validate(req.params);
       if (result.error) throw new ResponseError(result.error?.message, 400);
