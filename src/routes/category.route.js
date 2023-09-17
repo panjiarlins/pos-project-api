@@ -17,7 +17,6 @@ router.get(
 // GET category image by categoryId
 router.get(
   '/image/:id',
-  verifyUserAuth({ isAdmin: true, isCashier: true }),
   categoryValidator.getCategoryImageById,
   categoryController.getCategoryImageById
 );

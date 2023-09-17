@@ -18,7 +18,6 @@ router.get(
 // GET product image by productId
 router.get(
   '/image/:id',
-  verifyUserAuth({ isAdmin: true, isCashier: true }),
   productValidator.getProductImageById,
   productController.getProductImageById
 );
