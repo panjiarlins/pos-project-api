@@ -44,6 +44,7 @@ router.patch(
 // DELETE category by categoryId
 router.delete(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
   categoryValidator.deleteCategoryById,
   categoryController.deleteCategoryById
 );
