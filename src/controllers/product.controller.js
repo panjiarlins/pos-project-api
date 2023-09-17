@@ -111,10 +111,13 @@ const productController = {
   editProductById: async (req, res) => {
     try {
       await sequelize.transaction(async (t) => {
-        if (req.file) {
-          // get product image
+        // get product image
+        if (req.file)
           req.body.image = await sharp(req.file.buffer).png().toBuffer();
-        }
+
+        // check if there is data to be updated
+        if (Object.keys(req.body).length === 0)
+          throw new ResponseError('no data provided', 400);
 
         // update product
         const [numProductUpdated] = await Product.update(req.body, {
