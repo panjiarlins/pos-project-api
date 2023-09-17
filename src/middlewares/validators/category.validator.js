@@ -3,6 +3,20 @@ const { ResponseError } = require('../../errors');
 const sendResponse = require('../../utils/sendResponse');
 
 const categoryValidator = {
+  getCategoryImageById: (req, res, next) => {
+    try {
+      const schema = Joi.object({
+        id: Joi.number().integer().min(1).required(),
+      }).required();
+      const result = schema.validate(req.params);
+      if (result.error) throw new ResponseError(result.error?.message, 400);
+
+      next();
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
   createCategory: (req, res, next) => {
     try {
       // validate req.body

@@ -16,6 +16,20 @@ const categoryController = {
     }
   },
 
+  getCategoryImageById: async (req, res) => {
+    try {
+      const categoryData = await Category.findByPk(req.params.id, {
+        attributes: ['image'],
+      });
+      if (!categoryData?.image)
+        throw new ResponseError('category image not found', 404);
+
+      res.set('Content-type', 'image/png').send(categoryData.image);
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
   createCategory: async (req, res) => {
     try {
       // get category image
