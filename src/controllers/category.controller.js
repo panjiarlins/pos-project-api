@@ -1,23 +1,18 @@
 const sharp = require('sharp');
 const { sequelize, Category } = require('../models');
 const { ResponseError } = require('../errors');
+const sendResponse = require('../utils/sendResponse');
 
 const categoryController = {
-  getAllCategories: async (req, res) => {
+  getCategories: async (req, res) => {
     try {
       const categoriesData = await Category.findAll({
         attributes: { exclude: ['image'] },
       });
 
-      res.status(200).json({
-        status: 'success',
-        data: categoriesData,
-      });
+      sendResponse({ res, statusCode: 200, data: categoriesData });
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 

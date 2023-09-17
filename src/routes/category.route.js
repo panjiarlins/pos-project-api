@@ -1,14 +1,18 @@
 const router = require('express').Router();
+const verifyUserAuth = require('../middlewares/auth/verifyUserAuth');
 const { categoryValidator } = require('../middlewares/validators');
-const { categoryAuth } = require('../middlewares/auth');
 const { categoryController } = require('../controllers');
 const {
   multerBlobUploader,
   multerErrorHandler,
 } = require('../middlewares/multers');
 
-// GET all categories
-router.get('/', categoryController.getAllCategories);
+// GET categories
+router.get(
+  '/',
+  verifyUserAuth({ isAdmin: true, isCashier: true }),
+  categoryController.getCategories
+);
 
 // POST new category
 router.post(
@@ -25,7 +29,6 @@ router.patch(
   multerBlobUploader().single('image'),
   multerErrorHandler,
   categoryValidator.editCategoryById,
-  categoryAuth.editCategoryById,
   categoryController.editCategoryById
 );
 
@@ -33,7 +36,6 @@ router.patch(
 router.delete(
   '/:id',
   categoryValidator.deleteCategoryById,
-  categoryAuth.deleteCategoryById,
   categoryController.deleteCategoryById
 );
 
