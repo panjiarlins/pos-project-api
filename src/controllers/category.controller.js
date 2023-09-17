@@ -59,19 +59,21 @@ const categoryController = {
       if (req.file)
         req.body.image = await sharp(req.file.buffer).png().toBuffer();
 
-      // check if category exist
-      const categoryData = await Category.findByPk(req.params.id);
-      if (!categoryData) throw new ResponseError('category not found', 404);
+      // check if there is data to be updated
+      if (Object.keys(req.body).length === 0)
+        throw new ResponseError('no data provided', 400);
 
       // update category
-      await categoryData.update(req.body, { fields: ['name', 'image'] });
+      const [numCategoryUpdated] = await Category.update(req.body, {
+        where: { id: req.params.id },
+        fields: ['name', 'image'],
+      });
+      if (numCategoryUpdated === 0)
+        throw new ResponseError('category not found', 404);
 
       res.sendStatus(204);
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 

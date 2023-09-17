@@ -35,6 +35,7 @@ router.post(
 // PATCH edit caregory by categoryId
 router.patch(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
   categoryValidator.editCategoryById,
