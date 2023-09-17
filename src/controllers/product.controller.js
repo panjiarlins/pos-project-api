@@ -17,7 +17,30 @@ const productController = {
 
       const where = {};
       if (name) where.name = { [Sequelize.Op.like]: `%${name}%` };
-      if (categoryId) where['$Categories.id$'] = categoryId;
+
+      if (categoryId) {
+        const categoryData = await Category.findByPk(categoryId);
+        const productsData = await categoryData.getProducts({
+          where,
+          attributes: { exclude: ['image'] },
+          order: [[sortBy || 'updatedAt', orderBy || 'DESC']],
+          include: [
+            {
+              model: Category,
+              attributes: { exclude: ['image'] },
+            },
+            {
+              model: Variant,
+            },
+            {
+              model: Voucher,
+            },
+          ],
+        });
+
+        sendResponse({ res, statusCode: 200, data: productsData });
+        return;
+      }
 
       const productsData = await Product.findAll({
         where,
