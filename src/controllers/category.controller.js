@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-const { sequelize, Category } = require('../models');
+const { Category } = require('../models');
 const { ResponseError } = require('../errors');
 const sendResponse = require('../utils/sendResponse');
 
@@ -18,30 +18,24 @@ const categoryController = {
 
   createCategory: async (req, res) => {
     try {
-      await sequelize.transaction(async (t) => {
-        // get category image
-        if (req.file)
-          req.body.image = await sharp(req.file.buffer).png().toBuffer();
+      // get category image
+      req.body.image = await sharp(req.file.buffer).png().toBuffer();
 
-        // create category
-        const categoryData = await Category.create(req.body, {
-          fields: ['name', 'image'],
-          transaction: t,
-        });
+      // create new category
+      const categoryData = await Category.create(req.body, {
+        fields: ['name', 'image'],
+      });
 
-        res.status(201).json({
-          status: 'success',
-          data: {
-            ...categoryData.toJSON(),
-            image: undefined,
-          },
-        });
+      sendResponse({
+        res,
+        statusCode: 201,
+        data: {
+          ...categoryData.toJSON(),
+          image: undefined,
+        },
       });
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 

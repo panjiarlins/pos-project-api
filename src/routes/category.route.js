@@ -17,6 +17,7 @@ router.get(
 // POST new category
 router.post(
   '/',
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
   categoryValidator.createCategory,
