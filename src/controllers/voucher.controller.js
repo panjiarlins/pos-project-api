@@ -53,6 +53,20 @@ const voucherController = {
       sendResponse({ res, error });
     }
   },
+  gettAllVoucher: async (req, res) => {
+    try {
+      const voucherData = await Voucher.findAll();
+      res.status(200).json({
+        status: 'success',
+        data: voucherData,
+      });
+    } catch (error) {
+      res.status(error?.statusCode || 500).json({
+        status: 'error',
+        message: error?.message || error,
+      });
+    }
+  },
 };
 
 module.exports = voucherController;
