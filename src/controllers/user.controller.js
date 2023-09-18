@@ -1,44 +1,54 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sharp = require('sharp');
-
-const { User } = require('../models');
 const { ResponseError } = require('../errors');
+const sendResponse = require('../utils/sendResponse');
+const { Sequelize, User } = require('../models');
 
 const userController = {
   registerUser: async (req, res) => {
     try {
-      const existingUser = await User.findOne({
-        where: { email: req.body.email },
-      });
-
-      if (existingUser) throw new ResponseError('Email already in use', 400);
+      // Process and store the image in a buffer
+      req.body.image = await sharp(req.file.buffer).png().toBuffer();
 
       const hashedPass = await bcrypt.hash(req.body.password, 10);
 
-      // Process and store the image in a buffer
-      if (req.file) {
-        req.body.image = await sharp(req.file.buffer).png().toBuffer();
-      }
-
-      const newUser = await User.create({
-        ...req.body,
-        password: hashedPass,
+      const [userData, isCreated] = await User.findOrCreate({
+        where: {
+          [Sequelize.Op.or]: {
+            username: req.body.username,
+            email: req.body.email,
+          },
+        },
+        defaults: {
+          ...req.body,
+          password: hashedPass,
+        },
+        fields: [
+          'username',
+          'fullname',
+          'email',
+          'password',
+          'isAdmin',
+          'isCashier',
+          'isActive',
+          'image',
+        ],
       });
+      if (!isCreated)
+        throw new ResponseError('username/email already in use', 400);
 
-      res.status(201).json({
-        status: 'success',
+      sendResponse({
+        res,
+        statusCode: 201,
         data: {
-          ...newUser.toJSON(),
+          ...userData.toJSON(),
           image: undefined,
           password: undefined,
         },
       });
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 

@@ -1,14 +1,16 @@
 const router = require('express').Router();
+const verifyUserAuth = require('../middlewares/auth/verifyUserAuth');
+const userValidator = require('../middlewares/validators/user.validator');
 const { userController } = require('../controllers');
 const {
   multerBlobUploader,
   multerErrorHandler,
 } = require('../middlewares/multers');
-const userValidator = require('../middlewares/validators/user.validator');
 
 // POST register user
 router.post(
   '/',
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
   userValidator.registerUser,

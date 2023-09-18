@@ -1,10 +1,12 @@
 const Joi = require('joi');
 const { ResponseError } = require('../../errors');
+const sendResponse = require('../../utils/sendResponse');
 
 const userValidator = {
   registerUser: (req, res, next) => {
     try {
-      const schema = Joi.object({
+      // validate req.body
+      const schemaBody = Joi.object({
         username: Joi.string().required(),
         fullname: Joi.string().required(),
         email: Joi.string().email().required(),
@@ -13,17 +15,22 @@ const userValidator = {
         isCashier: Joi.boolean().required(),
         isActive: Joi.boolean().required(),
       });
-      const result = schema.validate(req.body);
-      if (result.error)
-        throw new ResponseError(result.error?.message || result.error, 400);
+      const resultBody = schemaBody.validate(req.body);
+      if (resultBody.error)
+        throw new ResponseError(resultBody.error?.message, 400);
+
+      // validate req.file
+      const schemaFile = Joi.required().label('image');
+      const resultFile = schemaFile.validate(req.file);
+      if (resultFile.error)
+        throw new ResponseError(resultFile.error?.message, 400);
+
       next();
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
+
   editUserByIdWithParams: (req, res, next) => {
     try {
       const schema = Joi.object({
