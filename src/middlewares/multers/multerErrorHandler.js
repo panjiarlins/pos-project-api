@@ -1,19 +1,14 @@
 const { MulterError } = require('multer');
+const sendResponse = require('../../utils/sendResponse');
 
 const multerErrorHandler = (err, req, res, next) => {
   if (err instanceof MulterError) {
-    res.status(400).json({
-      status: 'error',
-      message: err?.message || err,
-    });
+    sendResponse({ res, statusCode: 400, error: err });
     return;
   }
 
   if (err) {
-    res.status(err?.statusCode || 500).json({
-      status: 'error',
-      message: err?.message || err,
-    });
+    sendResponse({ res, error: err });
     return;
   }
 

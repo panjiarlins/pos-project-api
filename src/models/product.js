@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
+
       models.Product.belongsToMany(models.Voucher, {
         through: models.ProductVoucher,
         foreignKey: {
@@ -31,9 +32,11 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
+
       models.Product.hasMany(models.Variant, {
         foreignKey: {
           name: 'productId',
+          allowNull: false,
         },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',

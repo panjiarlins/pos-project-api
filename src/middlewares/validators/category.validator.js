@@ -1,7 +1,22 @@
 const Joi = require('joi');
 const { ResponseError } = require('../../errors');
+const sendResponse = require('../../utils/sendResponse');
 
 const categoryValidator = {
+  getCategoryImageById: (req, res, next) => {
+    try {
+      const schema = Joi.object({
+        id: Joi.number().integer().min(1).required(),
+      }).required();
+      const result = schema.validate(req.params);
+      if (result.error) throw new ResponseError(result.error?.message, 400);
+
+      next();
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
   createCategory: (req, res, next) => {
     try {
       // validate req.body
@@ -10,26 +25,17 @@ const categoryValidator = {
       }).required();
       const resultBody = schemaBody.validate(req.body);
       if (resultBody.error)
-        throw new ResponseError(
-          resultBody.error?.message || resultBody.error,
-          400
-        );
+        throw new ResponseError(resultBody.error?.message, 400);
 
       // validate req.file
       const schemaFile = Joi.required().label('image');
       const resultFile = schemaFile.validate(req.file);
       if (resultFile.error)
-        throw new ResponseError(
-          resultFile.error?.message || resultFile.error,
-          400
-        );
+        throw new ResponseError(resultFile.error?.message, 400);
 
       next();
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 
@@ -37,58 +43,41 @@ const categoryValidator = {
     try {
       // validate req.params
       const schemaParams = Joi.object({
-        id: Joi.number().min(1).required(),
+        id: Joi.number().integer().min(1).required(),
       }).required();
       const resultParams = schemaParams.validate(req.params);
       if (resultParams.error)
-        throw new ResponseError(
-          resultParams.error?.message || resultParams.error,
-          400
-        );
+        throw new ResponseError(resultParams.error?.message, 400);
 
       // validate req.body
-      const schemaBody = Joi.object({ name: Joi.string() });
+      const schemaBody = Joi.object({ name: Joi.string() }).required();
       const resultBody = schemaBody.validate(req.body);
       if (resultBody.error)
-        throw new ResponseError(
-          resultBody.error?.message || resultBody.error,
-          400
-        );
+        throw new ResponseError(resultBody.error?.message, 400);
 
       // validate req.file
       const schemaFile = Joi.optional().label('image');
       const resultFile = schemaFile.validate(req.file);
       if (resultFile.error)
-        throw new ResponseError(
-          resultFile.error?.message || resultFile.error,
-          400
-        );
+        throw new ResponseError(resultFile.error?.message, 400);
 
       next();
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 
   deleteCategoryById: (req, res, next) => {
     try {
       const schema = Joi.object({
-        id: Joi.number().min(1).required(),
+        id: Joi.number().integer().min(1).required(),
       }).required();
-
       const result = schema.validate(req.params);
-      if (result.error)
-        throw new ResponseError(result.error?.message || result.error, 400);
+      if (result.error) throw new ResponseError(result.error?.message, 400);
 
       next();
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 };

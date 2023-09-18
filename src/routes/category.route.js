@@ -1,18 +1,30 @@
 const router = require('express').Router();
+const verifyUserAuth = require('../middlewares/auth/verifyUserAuth');
 const { categoryValidator } = require('../middlewares/validators');
-const { categoryAuth } = require('../middlewares/auth');
 const { categoryController } = require('../controllers');
 const {
   multerBlobUploader,
   multerErrorHandler,
 } = require('../middlewares/multers');
 
-// GET all categories
-router.get('/', categoryController.getAllCategories);
+// GET categories
+router.get(
+  '/',
+  verifyUserAuth({ isAdmin: true, isCashier: true }),
+  categoryController.getCategories
+);
+
+// GET category image by categoryId
+router.get(
+  '/image/:id',
+  categoryValidator.getCategoryImageById,
+  categoryController.getCategoryImageById
+);
 
 // POST new category
 router.post(
   '/',
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
   categoryValidator.createCategory,
@@ -22,18 +34,18 @@ router.post(
 // PATCH edit caregory by categoryId
 router.patch(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
   categoryValidator.editCategoryById,
-  categoryAuth.editCategoryById,
   categoryController.editCategoryById
 );
 
 // DELETE category by categoryId
 router.delete(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
   categoryValidator.deleteCategoryById,
-  categoryAuth.deleteCategoryById,
   categoryController.deleteCategoryById
 );
 

@@ -1,6 +1,6 @@
 const router = require('express').Router();
+const verifyUserAuth = require('../middlewares/auth/verifyUserAuth');
 const { productValidator } = require('../middlewares/validators');
-const { productAuth } = require('../middlewares/auth');
 const { productController } = require('../controllers');
 const {
   multerBlobUploader,
@@ -8,32 +8,46 @@ const {
 } = require('../middlewares/multers');
 
 // GET products
-router.get('/', productValidator.getProducts, productController.getProducts);
+router.get(
+  '/',
+  verifyUserAuth({ isAdmin: true, isCashier: true }),
+  productValidator.getProducts,
+  productController.getProducts
+);
+
+// GET product image by productId
+router.get(
+  '/image/:id',
+  productValidator.getProductImageById,
+  productController.getProductImageById
+);
 
 // POST new product
 router.post(
   '/',
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
   productValidator.createProduct,
-  productAuth.createProduct,
   productController.createProduct
 );
 
 // PATCH edit product by productd
 router.patch(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
+  multerBlobUploader().single('image'),
+  multerErrorHandler,
   productValidator.editProductById,
-  productAuth.editProductById,
-  productValidator.editProductById
+  productController.editProductById
 );
 
 // DELETE product by productId
 router.delete(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
   productValidator.deleteProductById,
-  productAuth.deleteProductById,
-  productController.deleteProductId
+  productController.deleteProductById
 );
 
 module.exports = router;

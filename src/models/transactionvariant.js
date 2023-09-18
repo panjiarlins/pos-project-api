@@ -11,9 +11,6 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      // models.TransactionVariant.belongsTo(models.Variant, {
-      //   foreignKey: 'variantId',
-      // });
     }
   }
   TransactionVariant.init(
@@ -27,12 +24,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
     },
-    // {
-    //   price: {
-    //     type: DataTypes.FLOAT,
-    //     allowNull: false,
-    //   },
-    // },
     {
       sequelize,
       modelName: 'TransactionVariant',
