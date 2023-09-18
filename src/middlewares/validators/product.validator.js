@@ -15,7 +15,8 @@ const productValidator = {
             'description',
             'isActive',
             'createdAt',
-            'updatedAt'
+            'updatedAt',
+            'price'
           )
           .allow(''),
         orderBy: Joi.string().valid('ASC', 'asc', 'DESC', 'desc').allow(''),

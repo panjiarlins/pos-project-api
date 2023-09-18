@@ -15,6 +15,11 @@ const productController = {
     try {
       const { name, categoryId, sortBy, orderBy } = req.query;
 
+      const order =
+        sortBy === 'price'
+          ? [[Variant, sortBy, orderBy || 'DESC']]
+          : [[sortBy || 'updatedAt', orderBy || 'DESC']];
+
       const where = {};
       if (name) where.name = { [Sequelize.Op.like]: `%${name}%` };
 
@@ -23,7 +28,7 @@ const productController = {
         const productsData = await categoryData.getProducts({
           where,
           attributes: { exclude: ['image'] },
-          order: [[sortBy || 'updatedAt', orderBy || 'DESC']],
+          order,
           include: [
             {
               model: Category,
@@ -45,7 +50,7 @@ const productController = {
       const productsData = await Product.findAll({
         where,
         attributes: { exclude: ['image'] },
-        order: [[sortBy || 'updatedAt', orderBy || 'DESC']],
+        order,
         include: [
           {
             model: Category,
