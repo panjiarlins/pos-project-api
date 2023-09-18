@@ -53,43 +53,37 @@ const userController = {
   },
 
   loginUser: async (req, res) => {
-    const { username, password } = req.body;
-    console.log(req.body, 'login');
     try {
-      const user = await User.findOne({
-        where: { username },
-      });
+      const { username, password } = req.body;
 
-      if (!user) throw new ResponseError('user not found', 404);
+      const userData = await User.findOne({ where: { username } });
+      if (!userData) throw new ResponseError('user not found', 404);
 
-      const isValid = await bcrypt.compare(password, user.password);
-
+      const isValid = await bcrypt.compare(password, userData.password);
       if (!isValid) throw new ResponseError('wrong password', 400);
 
       const payload = {
-        id: user.id,
+        id: userData.id,
       };
 
       const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
         expiresIn: '24h',
       });
 
-      res.status(200).json({
-        status: 'success',
+      sendResponse({
+        res,
+        statusCode: 200,
         data: {
           token,
           user: {
-            ...user.toJSON(),
+            ...userData.toJSON(),
             image: undefined,
             password: undefined,
           },
         },
       });
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 

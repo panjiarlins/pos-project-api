@@ -31,6 +31,21 @@ const userValidator = {
     }
   },
 
+  loginUser: (req, res, next) => {
+    try {
+      const schema = Joi.object({
+        username: Joi.string().required(),
+        password: Joi.string().min(8).required(),
+      }).required();
+      const result = schema.validate(req.body);
+      if (result.error) throw new ResponseError(result.error?.message, 400);
+
+      next();
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
   editUserByIdWithParams: (req, res, next) => {
     try {
       const schema = Joi.object({

@@ -18,7 +18,7 @@ router.post(
 );
 
 // POST login user
-router.post('/auth', userController.loginUser);
+router.post('/auth', userValidator.loginUser, userController.loginUser);
 
 // GET all user
 router.get('/', userController.getAllUser);
