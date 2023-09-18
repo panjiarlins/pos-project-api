@@ -6,6 +6,41 @@ const sendResponse = require('../utils/sendResponse');
 const { Sequelize, User } = require('../models');
 
 const userController = {
+  getUsers: async (req, res) => {
+    try {
+      const usersData = await User.findAll({
+        attributes: {
+          exclude: ['image', 'password'],
+        },
+      });
+
+      sendResponse({ res, statusCode: 200, data: usersData });
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
+  getUserById: async (req, res) => {
+    try {
+      const userData = await User.findByPk(req.params.id, {
+        attributes: {
+          exclude: ['image', 'password'],
+        },
+      });
+      if (!userData) throw new ResponseError('user not found', 404);
+
+      res.status(200).json({
+        status: 'success',
+        data: userData,
+      });
+    } catch (error) {
+      res.status(error?.statusCode || 500).json({
+        status: 'error',
+        message: error?.message || error,
+      });
+    }
+  },
+
   registerUser: async (req, res) => {
     try {
       // Process and store the image in a buffer
@@ -84,47 +119,6 @@ const userController = {
       });
     } catch (error) {
       sendResponse({ res, error });
-    }
-  },
-
-  getAllUser: async (req, res) => {
-    try {
-      const usersData = await User.findAll({
-        attributes: {
-          exclude: ['image', 'password'],
-        },
-      });
-
-      res.status(200).json({
-        status: 'success',
-        data: usersData,
-      });
-    } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
-    }
-  },
-
-  getUserById: async (req, res) => {
-    try {
-      const userData = await User.findByPk(req.params.id, {
-        attributes: {
-          exclude: ['image', 'password'],
-        },
-      });
-      if (!userData) throw new ResponseError('user not found', 404);
-
-      res.status(200).json({
-        status: 'success',
-        data: userData,
-      });
-    } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
     }
   },
 
