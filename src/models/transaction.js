@@ -43,9 +43,22 @@ module.exports = (sequelize, DataTypes) => {
   }
   Transaction.init(
     {
-      userId: DataTypes.INTEGER,
-      voucherCode: DataTypes.STRING,
-      total: DataTypes.FLOAT,
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      voucherCode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      total: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      totalWithoutDiscount: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
     },
     {
       sequelize,
