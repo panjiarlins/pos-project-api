@@ -29,15 +29,9 @@ const userController = {
       });
       if (!userData) throw new ResponseError('user not found', 404);
 
-      res.status(200).json({
-        status: 'success',
-        data: userData,
-      });
+      sendResponse({ res, statusCode: 200, data: userData });
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 

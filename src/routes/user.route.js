@@ -7,11 +7,16 @@ const {
   multerErrorHandler,
 } = require('../middlewares/multers');
 
-// GET all user
+// GET users
 router.get('/', verifyUserAuth({ isAdmin: true }), userController.getUsers);
 
-// GET user by Id
-router.get('/user/:id', userValidator.getUserById, userController.getUserById);
+// GET user by userId
+router.get(
+  '/user/:id',
+  verifyUserAuth({ isAdmin: true, isCashier: true }),
+  userValidator.getUserById,
+  userController.getUserById
+);
 
 // POST register user
 router.post(
