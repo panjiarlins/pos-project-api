@@ -152,18 +152,12 @@ const userController = {
 
   deleteUserById: async (req, res) => {
     try {
-      const { id } = req.params;
-
-      const deletedUser = await User.destroy({ where: { id } });
-
+      const deletedUser = await User.destroy({ where: { id: req.params.id } });
       if (deletedUser === 0) throw new ResponseError('user not found', 400);
 
       res.sendStatus(204);
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 };

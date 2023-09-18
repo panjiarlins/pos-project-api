@@ -44,7 +44,8 @@ router.patch(
 // DELETE user by userId
 router.delete(
   '/:id',
-  userValidator.deleteUserByIdWithParams,
+  verifyUserAuth({ isAdmin: true }),
+  userValidator.deleteUserById,
   userController.deleteUserById
 );
 
