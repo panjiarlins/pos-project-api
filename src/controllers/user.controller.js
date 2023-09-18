@@ -35,6 +35,20 @@ const userController = {
     }
   },
 
+  getUserImageById: async (req, res) => {
+    try {
+      const userData = await User.findByPk(req.params.id, {
+        attributes: ['image'],
+      });
+      if (!userData?.image)
+        throw new ResponseError('user image not found', 404);
+
+      res.set('Content-type', 'image/png').send(userData.image);
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
   registerUser: async (req, res) => {
     try {
       // Process and store the image in a buffer

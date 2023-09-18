@@ -18,6 +18,13 @@ router.get(
   userController.getUserById
 );
 
+// GET user image by userId
+router.get(
+  '/image/:id',
+  userValidator.getUserImageById,
+  userController.getUserImageById
+);
+
 // POST register user
 router.post(
   '/',
