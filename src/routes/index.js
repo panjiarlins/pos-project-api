@@ -3,8 +3,6 @@ const categoryRouter = require('./category.route');
 const productRouter = require('./product.route');
 const transactionRouter = require('./transaction.route');
 const voucherRouter = require('./voucher.route');
-
-const voucherRouter = require('./voucher.route');
 const variantController = require('./variant.route');
 
 module.exports = {
@@ -13,6 +11,5 @@ module.exports = {
   productRouter,
   voucherRouter,
   transactionRouter,
-  voucherRouter,
   variantController,
 };

@@ -22,7 +22,7 @@ app.use(bearerToken());
 app.use('/users', userRouter);
 app.use('/categories', categoryRouter);
 app.use('/products', productRouter);
-app.use('/transaction', transactionRouter);
+app.use('/transactions', transactionRouter);
 app.use('/vouchers', voucherRouter);
 app.use('/variants', variantController);
 

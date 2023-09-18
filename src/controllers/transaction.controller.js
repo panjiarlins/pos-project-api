@@ -1,85 +1,125 @@
 const { ResponseError } = require('../errors');
 const {
+  Sequelize,
+  sequelize,
   Transaction,
   Variant,
   TransactionVariant,
-  Voucher,
-  sequelize,
 } = require('../models');
-// const voucher = require('../models/voucher');
-
-// const Voucher = require('../models/voucher');
-// const db = require('../models');
+const sendResponse = require('../utils/sendResponse');
 
 const transactionController = {
   createTransaction: async (req, res) => {
     try {
-      await sequelize.transaction(async (t) => {
-        const { voucherCode, userId, variants } = req.body;
+      await sequelize.transaction(
+        {
+          isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE,
+        },
+        async (t) => {
+          const { userId, variants, voucherCode } = req.body;
+          const variantsId = variants.map(({ variantId }) => variantId);
+          const quantities = variants.map(({ quantity }) => quantity);
+          const arrTotal = [];
+          const arrTotalWithoutDiscount = [];
+          let isVoucherValid = !voucherCode;
 
-        const variantIds = variants.map(({ variantId }) => variantId);
-        const quantities = variants.map(({ quantity }) => quantity);
+          // get all variants data
+          const variantsData = await Variant.findAll({
+            where: { id: variantsId },
+            transaction: t,
+          });
+          if (variantsData.length !== variantsId.length)
+            throw new ResponseError('invalid variantId', 400);
 
-        const variantsData = await Variant.findAll({
-          where: { id: variantIds },
-          transaction: t,
-        });
-        let totalAmount = 0;
-        let i = 0;
-        const prices = [];
-        while (i < variantIds.length) {
-          const quantity = quantities[i];
-          prices.push(variantsData[i].price);
+          // loop all variants data
+          // eslint-disable-next-line no-restricted-syntax
+          for (let i = 0; i < variantsData.length; i += 1) {
+            // descrease variant stock
+            if (variantsData[i].stock < quantities[i])
+              throw new ResponseError(
+                `out of stock for variantId:${variantsData[i].id}`,
+                400
+              );
+            // eslint-disable-next-line no-await-in-loop
+            await variantsData[i].increment(
+              { stock: -quantities[i] },
+              { transaction: t }
+            );
 
-          if (variantsData[i].stock < quantity)
-            throw new ResponseError('stock not enough', 400);
-          const itemPrice = variantsData[i].price * quantity;
-          totalAmount += itemPrice;
+            // get voucher data
+            if (voucherCode) {
+              // get product data
+              // eslint-disable-next-line no-await-in-loop
+              const productData = await variantsData[i].getProduct({
+                transaction: t,
+              });
+              if (!productData)
+                throw new ResponseError('invalid product data', 400);
 
+              // get voucherData
+              // eslint-disable-next-line no-await-in-loop
+              const [voucherData] = await productData.getVouchers({
+                where: { code: voucherCode },
+                transaction: t,
+              });
+              if (voucherData) isVoucherValid = true;
+
+              // push total
+              arrTotal.push(
+                voucherData
+                  ? variantsData[i].price *
+                      quantities[i] *
+                      (1 - voucherData.discount)
+                  : variantsData[i].price * quantities[i]
+              );
+            }
+
+            // push total
+            if (!voucherCode)
+              arrTotal.push(variantsData[i].price * quantities[i]);
+
+            // push total without discount
+            arrTotalWithoutDiscount.push(variantsData[i].price * quantities[i]);
+          }
+
+          if (!isVoucherValid)
+            throw new ResponseError('invalid voucher code', 400);
+
+          // create new transaction
           // eslint-disable-next-line no-await-in-loop
-          await variantsData[i].increment(
-            { stock: -quantity },
+          const transactionData = await Transaction.create(
+            {
+              userId,
+              voucherCode,
+              total: arrTotal.reduce((acc, curr) => acc + curr, 0),
+              totalWithoutDiscount: arrTotalWithoutDiscount.reduce(
+                (acc, curr) => acc + curr,
+                0
+              ),
+            },
             { transaction: t }
           );
-          i += 1;
+
+          // create new TransactionVariant
+          for (let i = 0; i < arrTotal.length; i += 1) {
+            // eslint-disable-next-line no-await-in-loop
+            await TransactionVariant.create(
+              {
+                transactionId: transactionData.id,
+                variantId: variantsId[i],
+                quantity: quantities[i],
+                total: arrTotal[i],
+                totalWithoutDiscount: arrTotalWithoutDiscount[i],
+              },
+              { transaction: t }
+            );
+          }
+
+          sendResponse({ res, statusCode: 201, data: transactionData });
         }
-
-        const voucherData = await Voucher.findByPk(voucherCode, {
-          transaction: t,
-        });
-        totalAmount *= 1 - voucherData.discount;
-        const transaction = await Transaction.create(
-          {
-            userId,
-            total: totalAmount,
-            voucherCode,
-          },
-          { transaction: t }
-        );
-
-        variantIds.forEach(
-          async (variantId, index) => {
-            await TransactionVariant.create({
-              transactionId: transaction.id,
-              variantId,
-              quantity: quantities[index],
-              price: prices[index],
-            });
-          },
-          { transaction: t }
-        );
-
-        res.status(200).json({
-          status: 'success',
-          message: 'Transaksi berhasil dibuat',
-          data: transaction,
-        });
-      });
+      );
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 };
