@@ -31,14 +31,14 @@ router.post(
 // POST login user
 router.post('/auth', userValidator.loginUser, userController.loginUser);
 
-// PATCH user by userId
+// PATCH edit user by userId
 router.patch(
   '/:id',
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
-  userValidator.editUserByIdWithParams,
-  userController.editUserById,
-  userValidator.editUserById
+  userValidator.editUserById,
+  userController.editUserById
 );
 
 // DELETE user by userId

@@ -117,14 +117,15 @@ const userController = {
   },
 
   editUserById: async (req, res) => {
-    // if (!req.token)
-    //   throw new ResponseError('Unauthorized: User Not Logged In!', 401);
     try {
-      // jwt.verify(req.token, process.env.JWT_SECRET_KEY);
-
-      if (req.file) {
+      if (req.file)
         req.body.image = await sharp(req.file.buffer).png().toBuffer();
+
+      if (req.body?.password) {
+        const hashedPass = await bcrypt.hash(req.body.password, 10);
+        req.body.password = hashedPass;
       }
+
       const [numUpdated] = await User.update(req.body, {
         where: {
           id: req.params.id,
@@ -133,6 +134,7 @@ const userController = {
           'username',
           'fullname',
           'email',
+          'password',
           'image',
           'isActive',
           'isAdmin',
@@ -143,10 +145,7 @@ const userController = {
 
       res.sendStatus(204);
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 
