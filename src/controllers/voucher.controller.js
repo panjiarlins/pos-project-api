@@ -3,6 +3,18 @@ const { ResponseError } = require('../errors');
 const { Sequelize, sequelize, Voucher, Product } = require('../models');
 
 const voucherController = {
+  getVouchers: async (req, res) => {
+    try {
+      const voucherData = await Voucher.findAll({
+        include: [{ model: Product, attributes: { exclude: ['image'] } }],
+      });
+
+      sendResponse({ res, statusCode: 200, data: voucherData });
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
   createVoucher: async (req, res) => {
     try {
       await sequelize.transaction(
@@ -51,20 +63,6 @@ const voucherController = {
       );
     } catch (error) {
       sendResponse({ res, error });
-    }
-  },
-  gettAllVoucher: async (req, res) => {
-    try {
-      const voucherData = await Voucher.findAll();
-      res.status(200).json({
-        status: 'success',
-        data: voucherData,
-      });
-    } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
     }
   },
 };

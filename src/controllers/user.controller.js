@@ -1,89 +1,12 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sharp = require('sharp');
-
-const { User } = require('../models');
 const { ResponseError } = require('../errors');
+const sendResponse = require('../utils/sendResponse');
+const { Sequelize, User } = require('../models');
 
 const userController = {
-  registerUser: async (req, res) => {
-    try {
-      const existingUser = await User.findOne({
-        where: { email: req.body.email },
-      });
-
-      if (existingUser) throw new ResponseError('Email already in use', 400);
-
-      const hashedPass = await bcrypt.hash(req.body.password, 10);
-
-      // Process and store the image in a buffer
-      if (req.file) {
-        req.body.image = await sharp(req.file.buffer).png().toBuffer();
-      }
-
-      const newUser = await User.create({
-        ...req.body,
-        password: hashedPass,
-      });
-
-      res.status(201).json({
-        status: 'success',
-        data: {
-          ...newUser.toJSON(),
-          image: undefined,
-          password: undefined,
-        },
-      });
-    } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
-    }
-  },
-
-  loginUser: async (req, res) => {
-    const { username, password } = req.body;
-    console.log(req.body, 'login');
-    try {
-      const user = await User.findOne({
-        where: { username },
-      });
-
-      if (!user) throw new ResponseError('user not found', 404);
-
-      const isValid = await bcrypt.compare(password, user.password);
-
-      if (!isValid) throw new ResponseError('wrong password', 400);
-
-      const payload = {
-        id: user.id,
-      };
-
-      const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: '24h',
-      });
-
-      res.status(200).json({
-        status: 'success',
-        data: {
-          token,
-          user: {
-            ...user.toJSON(),
-            image: undefined,
-            password: undefined,
-          },
-        },
-      });
-    } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
-    }
-  },
-
-  getAllUser: async (req, res) => {
+  getUsers: async (req, res) => {
     try {
       const usersData = await User.findAll({
         attributes: {
@@ -91,15 +14,9 @@ const userController = {
         },
       });
 
-      res.status(200).json({
-        status: 'success',
-        data: usersData,
-      });
+      sendResponse({ res, statusCode: 200, data: usersData });
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 
@@ -112,27 +29,117 @@ const userController = {
       });
       if (!userData) throw new ResponseError('user not found', 404);
 
-      res.status(200).json({
-        status: 'success',
-        data: userData,
+      sendResponse({ res, statusCode: 200, data: userData });
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
+  getUserImageById: async (req, res) => {
+    try {
+      const userData = await User.findByPk(req.params.id, {
+        attributes: ['image'],
+      });
+      if (!userData?.image)
+        throw new ResponseError('user image not found', 404);
+
+      res.set('Content-type', 'image/png').send(userData.image);
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
+  registerUser: async (req, res) => {
+    try {
+      // Process and store the image in a buffer
+      req.body.image = await sharp(req.file.buffer).png().toBuffer();
+
+      const hashedPass = await bcrypt.hash(req.body.password, 10);
+
+      const [userData, isCreated] = await User.findOrCreate({
+        where: {
+          [Sequelize.Op.or]: {
+            username: req.body.username,
+            email: req.body.email,
+          },
+        },
+        defaults: {
+          ...req.body,
+          password: hashedPass,
+        },
+        fields: [
+          'username',
+          'fullname',
+          'email',
+          'password',
+          'isAdmin',
+          'isCashier',
+          'isActive',
+          'image',
+        ],
+      });
+      if (!isCreated)
+        throw new ResponseError('username/email already in use', 400);
+
+      sendResponse({
+        res,
+        statusCode: 201,
+        data: {
+          ...userData.toJSON(),
+          image: undefined,
+          password: undefined,
+        },
       });
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
+      sendResponse({ res, error });
+    }
+  },
+
+  loginUser: async (req, res) => {
+    try {
+      const { username, password } = req.body;
+
+      const userData = await User.findOne({ where: { username } });
+      if (!userData) throw new ResponseError('user not found', 404);
+
+      const isValid = await bcrypt.compare(password, userData.password);
+      if (!isValid) throw new ResponseError('wrong password', 400);
+
+      const payload = {
+        id: userData.id,
+      };
+
+      const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+        expiresIn: '24h',
       });
+
+      sendResponse({
+        res,
+        statusCode: 200,
+        data: {
+          token,
+          user: {
+            ...userData.toJSON(),
+            image: undefined,
+            password: undefined,
+          },
+        },
+      });
+    } catch (error) {
+      sendResponse({ res, error });
     }
   },
 
   editUserById: async (req, res) => {
-    // if (!req.token)
-    //   throw new ResponseError('Unauthorized: User Not Logged In!', 401);
     try {
-      // jwt.verify(req.token, process.env.JWT_SECRET_KEY);
-
-      if (req.file) {
+      if (req.file)
         req.body.image = await sharp(req.file.buffer).png().toBuffer();
+
+      if (req.body?.password) {
+        const hashedPass = await bcrypt.hash(req.body.password, 10);
+        req.body.password = hashedPass;
       }
+
       const [numUpdated] = await User.update(req.body, {
         where: {
           id: req.params.id,
@@ -141,6 +148,7 @@ const userController = {
           'username',
           'fullname',
           'email',
+          'password',
           'image',
           'isActive',
           'isAdmin',
@@ -151,27 +159,18 @@ const userController = {
 
       res.sendStatus(204);
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 
   deleteUserById: async (req, res) => {
     try {
-      const { id } = req.params;
-
-      const deletedUser = await User.destroy({ where: { id } });
-
+      const deletedUser = await User.destroy({ where: { id: req.params.id } });
       if (deletedUser === 0) throw new ResponseError('user not found', 400);
 
       res.sendStatus(204);
     } catch (error) {
-      res.status(error?.statusCode || 500).json({
-        status: 'error',
-        message: error?.message || error,
-      });
+      sendResponse({ res, error });
     }
   },
 };

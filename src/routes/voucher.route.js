@@ -4,7 +4,11 @@ const { voucherValidator } = require('../middlewares/validators');
 const { voucherController } = require('../controllers');
 
 // GET vouchers
-router.get('/', voucherController.gettAllVoucher);
+router.get(
+  '/',
+  verifyUserAuth({ isAdmin: true, isCashier: true }),
+  voucherController.getVouchers
+);
 
 // POST create new voucher
 router.post(
