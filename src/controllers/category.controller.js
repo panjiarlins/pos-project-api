@@ -1,13 +1,20 @@
 const sharp = require('sharp');
-const { Category } = require('../models');
 const { ResponseError } = require('../errors');
 const sendResponse = require('../utils/sendResponse');
+const { Sequelize, Category, Product } = require('../models');
 
 const categoryController = {
   getCategories: async (req, res) => {
     try {
+      const { name } = req.query;
+
+      const where = {};
+      if (name) where.name = { [Sequelize.Op.like]: `%${name}%` };
+
       const categoriesData = await Category.findAll({
+        where,
         attributes: { exclude: ['image'] },
+        include: [{ model: Product, attributes: { exclude: ['image'] } }],
       });
 
       sendResponse({ res, statusCode: 200, data: categoriesData });
