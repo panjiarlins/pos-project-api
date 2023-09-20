@@ -20,6 +20,8 @@ const productValidator = {
           )
           .allow(''),
         orderBy: Joi.string().valid('ASC', 'asc', 'DESC', 'desc').allow(''),
+        page: Joi.number().integer().min(1).allow(''),
+        perPage: Joi.number().integer().min(1).allow(''),
       });
 
       const result = schema.validate(req.query);
