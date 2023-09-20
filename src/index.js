@@ -9,6 +9,7 @@ const {
   transactionRouter,
   voucherRouter,
   variantController,
+  transactionVariantController,
 } = require('./routes');
 // eslint-disable-next-line no-unused-vars
 const db = require('./models');
@@ -25,6 +26,7 @@ app.use('/products', productRouter);
 app.use('/transactions', transactionRouter);
 app.use('/vouchers', voucherRouter);
 app.use('/variants', variantController);
+app.use('/transVariant', transactionVariantController);
 
 app.listen(PORT, () => {
   console.log(`listen on port:${PORT}`);

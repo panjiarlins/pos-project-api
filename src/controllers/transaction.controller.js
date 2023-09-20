@@ -9,6 +9,23 @@ const {
 const sendResponse = require('../utils/sendResponse');
 
 const transactionController = {
+  getAllTransactions: async (req, res) => {
+    try {
+      const transactions = await Transaction.findAll({
+        include: [
+          {
+            // model: TransactionVariant,
+            model: Variant,
+          },
+        ],
+      });
+
+      sendResponse({ res, statusCode: 200, data: transactions });
+    } catch (error) {
+      sendResponse({ res, error });
+    }
+  },
+
   createTransaction: async (req, res) => {
     try {
       await sequelize.transaction(

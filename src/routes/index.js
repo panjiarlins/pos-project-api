@@ -4,6 +4,7 @@ const productRouter = require('./product.route');
 const transactionRouter = require('./transaction.route');
 const voucherRouter = require('./voucher.route');
 const variantController = require('./variant.route');
+const transactionVariantController = require('./transVariants');
 
 module.exports = {
   userRouter,
@@ -12,4 +13,5 @@ module.exports = {
   voucherRouter,
   transactionRouter,
   variantController,
+  transactionVariantController,
 };
