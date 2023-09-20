@@ -83,6 +83,7 @@ const productController = {
           },
           {
             model: Variant,
+            include: [{ model: Product, attributes: { exclude: ['image'] } }],
           },
           {
             model: Voucher,
