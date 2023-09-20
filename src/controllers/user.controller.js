@@ -28,6 +28,8 @@ const userController = {
         },
       });
       if (!userData) throw new ResponseError('user not found', 404);
+      if (!userData.isActive)
+        throw new ResponseError('user status inactive', 401);
 
       sendResponse({ res, statusCode: 200, data: userData });
     } catch (error) {
@@ -101,6 +103,8 @@ const userController = {
 
       const userData = await User.findOne({ where: { username } });
       if (!userData) throw new ResponseError('user not found', 404);
+      if (!userData.isActive)
+        throw new ResponseError('user status inactive', 401);
 
       const isValid = await bcrypt.compare(password, userData.password);
       if (!isValid) throw new ResponseError('wrong password', 400);

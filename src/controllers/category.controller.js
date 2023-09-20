@@ -1,16 +1,36 @@
 const sharp = require('sharp');
-const { Category } = require('../models');
 const { ResponseError } = require('../errors');
 const sendResponse = require('../utils/sendResponse');
+const { Sequelize, Category, Product } = require('../models');
 
 const categoryController = {
   getCategories: async (req, res) => {
     try {
+      req.query.page = Math.ceil(+req.query.page) || 1;
+      req.query.perPage = Math.ceil(+req.query.perPage) || 5;
+      const { name, page, perPage } = req.query;
+
+      const where = {};
+      if (name) where.name = { [Sequelize.Op.like]: `%${name}%` };
+
+      const totalData = await Category.count({ where });
       const categoriesData = await Category.findAll({
+        where,
         attributes: { exclude: ['image'] },
+        include: [{ model: Product, attributes: { exclude: ['image'] } }],
+        limit: perPage,
+        offset: (page - 1) * perPage,
       });
 
-      sendResponse({ res, statusCode: 200, data: categoriesData });
+      sendResponse({
+        res,
+        statusCode: 200,
+        data: categoriesData,
+        total_data: totalData,
+        total_page: Math.ceil(totalData / perPage),
+        current_page: page,
+        per_page: perPage,
+      });
     } catch (error) {
       sendResponse({ res, error });
     }

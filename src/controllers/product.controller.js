@@ -13,11 +13,20 @@ const {
 const productController = {
   getProducts: async (req, res) => {
     try {
-      const { name, categoryId, sortBy, orderBy } = req.query;
+      req.query.page = +req.query.page || 1;
+      req.query.perPage = +req.query.perPage || 5;
+      const { name, categoryId, sortBy, orderBy, page, perPage } = req.query;
 
       const order =
         sortBy === 'price'
-          ? [[Variant, sortBy, orderBy || 'DESC']]
+          ? [
+              [
+                Sequelize.literal(
+                  `(SELECT MAX(price) FROM Variants WHERE Variants.productId = Product.id)`
+                ),
+                orderBy || 'DESC',
+              ],
+            ]
           : [[sortBy || 'updatedAt', orderBy || 'DESC']];
 
       const where = {};
@@ -25,10 +34,14 @@ const productController = {
 
       if (categoryId) {
         const categoryData = await Category.findByPk(categoryId);
+        if (!categoryData) throw new ResponseError('invalid categoryId', 400);
+
         const productsData = await categoryData.getProducts({
           where,
           attributes: { exclude: ['image'] },
           order,
+          limit: perPage,
+          offset: (page - 1) * perPage,
           include: [
             {
               model: Category,
@@ -43,7 +56,17 @@ const productController = {
           ],
         });
 
-        sendResponse({ res, statusCode: 200, data: productsData });
+        const totalData = await categoryData.countProducts({ where });
+
+        sendResponse({
+          res,
+          statusCode: 200,
+          data: productsData,
+          total_data: totalData,
+          total_page: Math.ceil(totalData / perPage),
+          current_page: page,
+          per_page: perPage,
+        });
         return;
       }
 
@@ -51,6 +74,8 @@ const productController = {
         where,
         attributes: { exclude: ['image'] },
         order,
+        limit: perPage,
+        offset: (page - 1) * perPage,
         include: [
           {
             model: Category,
@@ -58,6 +83,7 @@ const productController = {
           },
           {
             model: Variant,
+            include: [{ model: Product, attributes: { exclude: ['image'] } }],
           },
           {
             model: Voucher,
@@ -65,7 +91,17 @@ const productController = {
         ],
       });
 
-      sendResponse({ res, statusCode: 200, data: productsData });
+      const totalData = await Product.count({ where });
+
+      sendResponse({
+        res,
+        statusCode: 200,
+        data: productsData,
+        total_data: totalData,
+        total_page: Math.ceil(totalData / perPage),
+        current_page: page,
+        per_page: perPage,
+      });
     } catch (error) {
       sendResponse({ res, error });
     }

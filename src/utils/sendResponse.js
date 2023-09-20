@@ -1,4 +1,4 @@
-function sendResponse({ res, statusCode, data, error }) {
+function sendResponse({ res, error, statusCode, data, ...info }) {
   const code = error
     ? statusCode || error?.statusCode || 500
     : statusCode || 200;
@@ -9,6 +9,7 @@ function sendResponse({ res, statusCode, data, error }) {
     status,
     data,
     message,
+    info: Object.keys(info).length ? info : undefined,
   });
 }
 

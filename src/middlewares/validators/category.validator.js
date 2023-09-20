@@ -19,6 +19,12 @@ const categoryValidator = {
 
   createCategory: (req, res, next) => {
     try {
+      // validate req.file
+      const schemaFile = Joi.required().label('image');
+      const resultFile = schemaFile.validate(req.file);
+      if (resultFile.error)
+        throw new ResponseError(resultFile.error?.message, 400);
+
       // validate req.body
       const schemaBody = Joi.object({
         name: Joi.string().required(),
@@ -26,12 +32,6 @@ const categoryValidator = {
       const resultBody = schemaBody.validate(req.body);
       if (resultBody.error)
         throw new ResponseError(resultBody.error?.message, 400);
-
-      // validate req.file
-      const schemaFile = Joi.required().label('image');
-      const resultFile = schemaFile.validate(req.file);
-      if (resultFile.error)
-        throw new ResponseError(resultFile.error?.message, 400);
 
       next();
     } catch (error) {
@@ -49,17 +49,17 @@ const categoryValidator = {
       if (resultParams.error)
         throw new ResponseError(resultParams.error?.message, 400);
 
-      // validate req.body
-      const schemaBody = Joi.object({ name: Joi.string() }).required();
-      const resultBody = schemaBody.validate(req.body);
-      if (resultBody.error)
-        throw new ResponseError(resultBody.error?.message, 400);
-
       // validate req.file
       const schemaFile = Joi.optional().label('image');
       const resultFile = schemaFile.validate(req.file);
       if (resultFile.error)
         throw new ResponseError(resultFile.error?.message, 400);
+
+      // validate req.body
+      const schemaBody = Joi.object({ name: Joi.string() }).required();
+      const resultBody = schemaBody.validate(req.body);
+      if (resultBody.error)
+        throw new ResponseError(resultBody.error?.message, 400);
 
       next();
     } catch (error) {
