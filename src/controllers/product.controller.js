@@ -54,6 +54,7 @@ const productController = {
             },
             {
               model: Variant,
+              include: [{ model: Product, attributes: { exclude: ['image'] } }],
             },
             {
               model: Voucher,
@@ -284,7 +285,27 @@ const productController = {
             await productData.addVariants(newVariantsData, { transaction: t });
           }
 
-          res.sendStatus(204);
+          const result = await Product.findByPk(req.params.id, {
+            attributes: { exclude: ['image'] },
+            include: [
+              {
+                model: Category,
+                attributes: { exclude: ['image'] },
+              },
+              {
+                model: Variant,
+                include: [
+                  { model: Product, attributes: { exclude: ['image'] } },
+                ],
+              },
+              {
+                model: Voucher,
+              },
+            ],
+            transaction: t,
+          });
+
+          sendResponse({ res, statusCode: 200, data: result });
         }
       );
     } catch (error) {
