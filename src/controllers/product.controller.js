@@ -13,9 +13,7 @@ const {
 const productController = {
   getProducts: async (req, res) => {
     try {
-      req.query.page = +req.query.page || 1;
-      req.query.perPage = +req.query.perPage || 5;
-      const { name, categoryId, sortBy, orderBy, page, perPage } = req.query;
+      const { name, categoryId, sortBy, orderBy } = req.query;
 
       const order =
         sortBy === 'price'
@@ -32,6 +30,14 @@ const productController = {
       const where = {};
       if (name) where.name = { [Sequelize.Op.like]: `%${name}%` };
 
+      const pagination = {};
+      if (req.query.isPaginated !== 'false') {
+        req.query.page = +req.query.page || 1;
+        req.query.perPage = +req.query.perPage || 5;
+        pagination.limit = req.query.perPage;
+        pagination.offset = (req.query.page - 1) * req.query.perPage;
+      }
+
       if (categoryId) {
         const categoryData = await Category.findByPk(categoryId);
         if (!categoryData) throw new ResponseError('invalid categoryId', 400);
@@ -40,8 +46,7 @@ const productController = {
           where,
           attributes: { exclude: ['image'] },
           order,
-          limit: perPage,
-          offset: (page - 1) * perPage,
+          ...pagination,
           include: [
             {
               model: Category,
@@ -58,14 +63,19 @@ const productController = {
 
         const totalData = await categoryData.countProducts({ where });
 
+        const paginationInfo = {};
+        if (req.query.isPaginated !== 'false') {
+          paginationInfo.total_page = Math.ceil(totalData / req.query.perPage);
+          paginationInfo.current_page = req.query.page;
+          paginationInfo.per_page = req.query.perPage;
+        }
+
         sendResponse({
           res,
           statusCode: 200,
           data: productsData,
           total_data: totalData,
-          total_page: Math.ceil(totalData / perPage),
-          current_page: page,
-          per_page: perPage,
+          ...paginationInfo,
         });
         return;
       }
@@ -74,8 +84,7 @@ const productController = {
         where,
         attributes: { exclude: ['image'] },
         order,
-        limit: perPage,
-        offset: (page - 1) * perPage,
+        ...pagination,
         include: [
           {
             model: Category,
@@ -93,14 +102,19 @@ const productController = {
 
       const totalData = await Product.count({ where });
 
+      const paginationInfo = {};
+      if (req.query.isPaginated !== 'false') {
+        paginationInfo.total_page = Math.ceil(totalData / req.query.perPage);
+        paginationInfo.current_page = req.query.page;
+        paginationInfo.per_page = req.query.perPage;
+      }
+
       sendResponse({
         res,
         statusCode: 200,
         data: productsData,
         total_data: totalData,
-        total_page: Math.ceil(totalData / perPage),
-        current_page: page,
-        per_page: perPage,
+        ...paginationInfo,
       });
     } catch (error) {
       sendResponse({ res, error });

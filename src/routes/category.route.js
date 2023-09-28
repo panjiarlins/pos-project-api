@@ -11,6 +11,7 @@ const {
 router.get(
   '/',
   verifyUserAuth({ isAdmin: true, isCashier: true }),
+  categoryValidator.getCategories,
   categoryController.getCategories
 );
 
