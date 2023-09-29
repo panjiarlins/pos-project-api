@@ -1,7 +1,7 @@
 const sharp = require('sharp');
 const { ResponseError } = require('../errors');
 const sendResponse = require('../utils/sendResponse');
-const { Sequelize, Category, Product } = require('../models');
+const { Sequelize, sequelize, Category } = require('../models');
 
 const categoryController = {
   getCategories: async (req, res) => {
@@ -10,37 +10,25 @@ const categoryController = {
       if (req.query.name)
         where.name = { [Sequelize.Op.like]: `%${req.query.name}%` };
 
-      const pagination = {};
-      if (req.query.isPaginated !== 'false') {
-        req.query.page = Math.ceil(+req.query.page) || 1;
-        req.query.perPage = Math.ceil(+req.query.perPage) || 5;
-
-        pagination.limit = req.query.perPage;
-        pagination.offset = (req.query.page - 1) * req.query.perPage;
-      }
-
-      const totalData = await Category.count({ where });
-
-      const paginationInfo = {};
-      if (req.query.isPaginated !== 'false') {
-        paginationInfo.total_page = Math.ceil(totalData / req.query.perPage);
-        paginationInfo.current_page = req.query.page;
-        paginationInfo.per_page = req.query.perPage;
-      }
-
       const categoriesData = await Category.findAll({
         where,
-        attributes: { exclude: ['image'] },
-        include: [{ model: Product, attributes: { exclude: ['image'] } }],
-        ...pagination,
+        attributes: {
+          include: [
+            [
+              sequelize.literal(
+                '(SELECT COUNT(*) FROM ProductCategories WHERE Category.id = ProductCategories.categoryId)'
+              ),
+              'total_products',
+            ],
+          ],
+          exclude: ['image'],
+        },
       });
 
       sendResponse({
         res,
         statusCode: 200,
         data: categoriesData,
-        total_data: totalData,
-        ...paginationInfo,
       });
     } catch (error) {
       sendResponse({ res, error });
@@ -86,23 +74,46 @@ const categoryController = {
 
   editCategoryById: async (req, res) => {
     try {
-      // get category image
-      if (req.file)
-        req.body.image = await sharp(req.file.buffer).png().toBuffer();
+      await sequelize.transaction(
+        {
+          isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE,
+        },
+        async (t) => {
+          // get category image
+          if (req.file)
+            req.body.image = await sharp(req.file.buffer).png().toBuffer();
 
-      // check if there is data to be updated
-      if (Object.keys(req.body).length === 0)
-        throw new ResponseError('no data provided', 400);
+          // check if there is data to be updated
+          if (Object.keys(req.body).length === 0)
+            throw new ResponseError('no data provided', 400);
 
-      // update category
-      const [numCategoryUpdated] = await Category.update(req.body, {
-        where: { id: req.params.id },
-        fields: ['name', 'image'],
-      });
-      if (numCategoryUpdated === 0)
-        throw new ResponseError('category not found', 404);
+          // update category
+          const [numCategoryUpdated] = await Category.update(req.body, {
+            where: { id: req.params.id },
+            fields: ['name', 'image'],
+            transaction: t,
+          });
+          if (numCategoryUpdated === 0)
+            throw new ResponseError('category not found', 404);
 
-      res.sendStatus(204);
+          const result = await Category.findByPk(req.params.id, {
+            attributes: {
+              include: [
+                [
+                  sequelize.literal(
+                    '(SELECT COUNT(*) FROM ProductCategories WHERE Category.id = ProductCategories.categoryId)'
+                  ),
+                  'total_products',
+                ],
+              ],
+              exclude: ['image'],
+            },
+            transaction: t,
+          });
+
+          sendResponse({ res, statusCode: 200, data: result });
+        }
+      );
     } catch (error) {
       sendResponse({ res, error });
     }
