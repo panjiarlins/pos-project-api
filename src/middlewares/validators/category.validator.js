@@ -7,9 +7,6 @@ const categoryValidator = {
     try {
       const schema = Joi.object({
         name: Joi.string().allow(''),
-        isPaginated: Joi.boolean().allow(''),
-        page: Joi.number().integer().min(1).allow(''),
-        perPage: Joi.number().integer().min(1).allow(''),
       });
       const result = schema.validate(req.query);
       if (result.error) throw new ResponseError(result.error?.message, 400);
