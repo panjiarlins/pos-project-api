@@ -28,7 +28,7 @@ router.get(
 // POST register user
 router.post(
   '/',
-  // verifyUserAuth({ isAdmin: true }),
+  verifyUserAuth({ isAdmin: true }),
   multerBlobUploader().single('image'),
   multerErrorHandler,
   userValidator.registerUser,
